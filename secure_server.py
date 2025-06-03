@@ -19,6 +19,7 @@ from collections import defaultdict
 import html
 import mimetypes
 import json
+import getpass
 
 try:
     import qrcode
@@ -815,7 +816,7 @@ def setup_server():
     
     # Get configuration
     username = input("Enter username: ").strip()
-    password = input("Enter password: ").strip()
+    password = getpass.getpass("Enter password: ").strip()
     
     while True:
         try:
