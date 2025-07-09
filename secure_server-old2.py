@@ -5,7 +5,6 @@ Zero-database, password-protected, file-serving system
 Built for secure, anonymous use with terminal aesthetic
 """
 
-import ssl
 import os
 import sys
 import time
@@ -21,8 +20,6 @@ from socketserver import ThreadingMixIn
 import mimetypes
 import json
 import html
-import zipfile
-import io
 
 # ASCII QR Code generation (fallback if qrcode not available)
 try:
@@ -216,7 +213,6 @@ class SecureFileHandler(BaseHTTPRequestHandler):
             parent_url = f"/{parent}" if parent else "/"
             file_rows += f'''
             <tr style="border-bottom: 1px solid #333;">
-                <td style="padding: 8px; color: #ccc;"></td>
                 <td style="padding: 8px; color: #ccc;">📁</td>
                 <td style="padding: 8px;"><a href="{parent_url}" style="color: #fff; text-decoration: none;">..</a></td>
                 <td style="padding: 8px; color: #888;">-</td>
@@ -234,7 +230,6 @@ class SecureFileHandler(BaseHTTPRequestHandler):
                 icon = "📁"
                 size_str = "-"
                 actions = f'<div class="action-btns"><a href="{file_url}">OPEN</a></div>'
-                checkbox = ""  # No checkbox for directories
             else:
                 file_url = f"/{rel_path}/{encoded_name}" if rel_path else f"/{encoded_name}"
                 icon = "📄"
@@ -243,13 +238,11 @@ class SecureFileHandler(BaseHTTPRequestHandler):
                 <a href="{file_url}">GET</a>
                 <a href="{file_url}?view=1">VIEW</a>
                 </div>'''
-                checkbox = f'<input type="checkbox" class="file-checkbox" value="{html.escape(file_url)}" onchange="updateDownloadButton()" style="margin: 0;">'
             
             date_str = info['modified'].strftime('%Y-%m-%d %H:%M')
             
             file_rows += f'''
             <tr style="border-bottom: 1px solid #333;" onmouseover="this.style.backgroundColor='#222'" onmouseout="this.style.backgroundColor='transparent'">
-                <td style="padding: 8px; color: #ccc;">{checkbox}</td>
                 <td style="padding: 8px; color: #ccc;">{icon}</td>
                 <td style="padding: 8px; color: #fff;">{html.escape(name)}</td>
                 <td style="padding: 8px; color: #888;">{size_str}</td>
@@ -363,12 +356,11 @@ class SecureFileHandler(BaseHTTPRequestHandler):
             overflow: hidden;
             text-overflow: ellipsis;
         }}
-        .file-table th:nth-child(1), .file-table td:nth-child(1) {{ width: 6%; }}
-        .file-table th:nth-child(2), .file-table td:nth-child(2) {{ width: 8%; }}
-        .file-table th:nth-child(3), .file-table td:nth-child(3) {{ width: 30%; }}
-        .file-table th:nth-child(4), .file-table td:nth-child(4) {{ width: 12%; }}
-        .file-table th:nth-child(5), .file-table td:nth-child(5) {{ width: 20%; }}
-        .file-table th:nth-child(6), .file-table td:nth-child(6) {{ width: 24%; }}
+        .file-table th:nth-child(1), .file-table td:nth-child(1) {{ width: 8%; }}
+        .file-table th:nth-child(2), .file-table td:nth-child(2) {{ width: 35%; }}
+        .file-table th:nth-child(3), .file-table td:nth-child(3) {{ width: 12%; }}
+        .file-table th:nth-child(4), .file-table td:nth-child(4) {{ width: 20%; }}
+        .file-table th:nth-child(5), .file-table td:nth-child(5) {{ width: 25%; }}
         .action-btns {{
             display: flex;
             gap: 4px;
@@ -436,12 +428,11 @@ class SecureFileHandler(BaseHTTPRequestHandler):
                 padding: 6px 2px;
                 font-size: 11px;
             }}
-            .file-table th:nth-child(1), .file-table td:nth-child(1) {{ width: 8%; }}
-            .file-table th:nth-child(2), .file-table td:nth-child(2) {{ width: 10%; }}
-            .file-table th:nth-child(3), .file-table td:nth-child(3) {{ width: 25%; }}
-            .file-table th:nth-child(4), .file-table td:nth-child(4) {{ width: 15%; }}
-            .file-table th:nth-child(5), .file-table td:nth-child(5) {{ width: 20%; }}
-            .file-table th:nth-child(6), .file-table td:nth-child(6) {{ width: 22%; }}
+            .file-table th:nth-child(1), .file-table td:nth-child(1) {{ width: 10%; }}
+            .file-table th:nth-child(2), .file-table td:nth-child(2) {{ width: 30%; }}
+            .file-table th:nth-child(3), .file-table td:nth-child(3) {{ width: 15%; }}
+            .file-table th:nth-child(4), .file-table td:nth-child(4) {{ width: 20%; }}
+            .file-table th:nth-child(5), .file-table td:nth-child(5) {{ width: 25%; }}
             .action-btns {{
                 flex-direction: column;
                 gap: 2px;
@@ -462,16 +453,15 @@ class SecureFileHandler(BaseHTTPRequestHandler):
         
         /* Very small mobile screens */
         @media (max-width: 480px) {{
+            .file-table th:nth-child(3), .file-table td:nth-child(3) {{ 
+                display: none; 
+            }}
             .file-table th:nth-child(4), .file-table td:nth-child(4) {{ 
                 display: none; 
             }}
-            .file-table th:nth-child(5), .file-table td:nth-child(5) {{ 
-                display: none; 
-            }}
-            .file-table th:nth-child(1), .file-table td:nth-child(1) {{ width: 10%; }}
-            .file-table th:nth-child(2), .file-table td:nth-child(2) {{ width: 12%; }}
-            .file-table th:nth-child(3), .file-table td:nth-child(3) {{ width: 38%; }}
-            .file-table th:nth-child(6), .file-table td:nth-child(6) {{ width: 40%; }}
+            .file-table th:nth-child(1), .file-table td:nth-child(1) {{ width: 12%; }}
+            .file-table th:nth-child(2), .file-table td:nth-child(2) {{ width: 48%; }}
+            .file-table th:nth-child(5), .file-table td:nth-child(5) {{ width: 40%; }}
         }}
     </style>
 </head>
@@ -499,7 +489,6 @@ class SecureFileHandler(BaseHTTPRequestHandler):
             </select>
             <button class="btn" onclick="search()">SEARCH</button>
             <button class="btn" onclick="clearSearch()">CLEAR</button>
-            <button class="btn" onclick="downloadSelected()" id="downloadBtn" disabled>DOWNLOAD SELECTED</button>
         </div>
         
         <div class="upload-form">
@@ -514,9 +503,6 @@ class SecureFileHandler(BaseHTTPRequestHandler):
         <table class="file-table">
             <thead>
                 <tr>
-                    <th>
-                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="margin: 0;">
-                    </th>
                     <th>Type</th>
                     <th>Name</th>
                     <th>Size</th>
@@ -554,79 +540,6 @@ class SecureFileHandler(BaseHTTPRequestHandler):
             url.searchParams.delete('sort');
             window.location = url;
         }}
-
-        function toggleSelectAll() {{
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const fileCheckboxes = document.querySelectorAll('.file-checkbox');
-            
-            fileCheckboxes.forEach(checkbox => {{
-                checkbox.checked = selectAllCheckbox.checked;
-            }});
-            
-            updateDownloadButton();
-        }}
-
-        function updateDownloadButton() {{
-            const fileCheckboxes = document.querySelectorAll('.file-checkbox');
-            const checkedBoxes = document.querySelectorAll('.file-checkbox:checked');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const selectAllCheckbox = document.getElementById('selectAll');
-            
-            // Update download button state
-            downloadBtn.disabled = checkedBoxes.length === 0;
-            
-            // Update select all checkbox state
-            if (checkedBoxes.length === 0) {{
-                selectAllCheckbox.indeterminate = false;
-                selectAllCheckbox.checked = false;
-            }} else if (checkedBoxes.length === fileCheckboxes.length) {{
-                selectAllCheckbox.indeterminate = false;
-                selectAllCheckbox.checked = true;
-            }} else {{
-                selectAllCheckbox.indeterminate = true;
-            }}
-        }}
-
-        function downloadSelected() {{
-            const checkedBoxes = document.querySelectorAll('.file-checkbox:checked');
-            if (checkedBoxes.length === 0) {{
-                alert('Please select files to download.');
-                return;
-            }}
-
-            const selectedFiles = Array.from(checkedBoxes).map(checkbox => checkbox.value);
-            
-            // Send POST request to batch download endpoint
-            fetch('/batch_download', {{
-                method: 'POST',
-                headers: {{
-                    'Content-Type': 'application/json',
-                }},
-                body: JSON.stringify({{ files: selectedFiles }})
-            }})
-            .then(response => {{
-                if (response.ok) {{
-                    return response.blob();
-                }} else {{
-                    throw new Error('Download failed');
-                }}
-            }})
-            .then(blob => {{
-                // Create download link
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = 'batch_download.zip';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            }})
-            .catch(error => {{
-                alert('Download failed: ' + error.message);
-            }});
-        }}
     </script>
 </body>
 </html>'''
@@ -662,51 +575,6 @@ class SecureFileHandler(BaseHTTPRequestHandler):
         except Exception as e:
             return f"QR generation failed: {str(e)}"
     
-    def handle_batch_download(self):
-        """Handle batch download request"""
-        try:
-            content_length = int(self.headers.get("Content-Length", 0))
-            post_data = self.rfile.read(content_length)
-            selected_files_json = json.loads(post_data.decode("utf-8"))
-            selected_files = selected_files_json.get("files", [])
-
-            if not selected_files:
-                self.send_response(400)
-                self.send_header("Content-Type", "text/html")
-                self.end_headers()
-                self.wfile.write(b"<html><body><h1>Bad Request</h1><p>No files selected for download.</p></body></html>")
-                return
-
-            # Create a in-memory zip file
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-                for file_path_encoded in selected_files:
-                    file_path = self.sanitize_path(file_path_encoded)
-                    if os.path.exists(file_path) and os.path.isfile(file_path):
-                        # Add file to zip, preserving directory structure relative to current working directory
-                        arcname = os.path.relpath(file_path, os.getcwd())
-                        zipf.write(file_path, arcname)
-
-            zip_buffer.seek(0)
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/zip")
-            self.send_header("Content-Disposition", "attachment; filename=\"batch_download.zip\"")
-            self.send_header("Content-Length", str(zip_buffer.getbuffer().nbytes))
-            self.end_headers()
-            self.wfile.write(zip_buffer.getvalue())
-
-        except json.JSONDecodeError:
-            self.send_response(400)
-            self.send_header("Content-Type", "text/html")
-            self.end_headers()
-            self.wfile.write(b"<html><body><h1>Bad Request</h1><p>Invalid JSON payload.</p></body></html>")
-        except Exception as e:
-            self.send_response(500)
-            self.send_header("Content-Type", "text/html")
-            self.end_headers()
-            self.wfile.write(f"<html><body><h1>Server Error</h1><p>{html.escape(str(e))}</p></body></html>".encode())
-
     def do_GET(self):
         """Handle GET requests"""
         if not self.authenticate():
@@ -793,23 +661,42 @@ class SecureFileHandler(BaseHTTPRequestHandler):
             # File download/view
             try:
                 if view_mode == '1':
-                    # View file content
+                    # View file content (text files only)
                     mime_type, _ = mimetypes.guess_type(safe_path)
-                    if not mime_type:
-                        mime_type = 'application/octet-stream'
-
-                    self.send_response(200)
-                    self.send_header('Content-Type', mime_type)
-                    # Do not send Content-Disposition: attachment to allow in-browser viewing
-                    self.send_header('Content-Length', str(os.path.getsize(safe_path)))
-                    self.end_headers()
-
-                    with open(safe_path, 'rb') as f:
-                        while True:
-                            chunk = f.read(8192)
-                            if not chunk:
-                                break
-                            self.wfile.write(chunk)
+                    if mime_type and mime_type.startswith('text/'):
+                        with open(safe_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            content = f.read()
+                        
+                        html_content = f'''<!DOCTYPE html>
+<html>
+<head>
+    <title>{html.escape(os.path.basename(safe_path))} - DEMIGOD SERVER</title>
+    <style>
+        body {{ background: #000; color: #fff; font-family: 'Courier New', monospace; margin: 0; padding: 20px; }}
+        .header {{ margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }}
+        .content {{ background: #111; padding: 20px; border: 1px solid #333; white-space: pre-wrap; overflow-x: auto; }}
+        .back-btn {{ display: inline-block; padding: 8px 16px; background: #333; color: #fff; text-decoration: none; border-radius: 3px; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>📄 {html.escape(os.path.basename(safe_path))}</h2>
+        <a href="javascript:history.back()" class="back-btn">BACK</a>
+        <a href="{html.escape(path_part)}" class="back-btn" style="margin-left: 10px;">DOWNLOAD</a>
+    </div>
+    <div class="content">{html.escape(content)}</div>
+</body>
+</html>'''
+                        
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'text/html')
+                        self.end_headers()
+                        self.wfile.write(html_content.encode())
+                    else:
+                        # Non-text file, redirect to download
+                        self.send_response(302)
+                        self.send_header('Location', path_part)
+                        self.end_headers()
                 else:
                     # Download file
                     mime_type, _ = mimetypes.guess_type(safe_path)
@@ -817,20 +704,20 @@ class SecureFileHandler(BaseHTTPRequestHandler):
                         mime_type = 'application/octet-stream'
                     
                     file_size = os.path.getsize(safe_path)
-                    filename = os.path.basename(safe_path);
+                    filename = os.path.basename(safe_path)
                     
                     self.send_response(200)
                     self.send_header('Content-Type', mime_type)
                     self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
                     self.send_header('Content-Length', str(file_size))
-                    self.end_headers();
+                    self.end_headers()
                     
                     with open(safe_path, 'rb') as f:
                         while True:
-                            chunk = f.read(8192);
+                            chunk = f.read(8192)
                             if not chunk:
-                                break;
-                            self.wfile.write(chunk);
+                                break
+                            self.wfile.write(chunk)
             except Exception as e:
                 self.send_response(500)
                 self.send_header('Content-Type', 'text/html')
@@ -886,93 +773,90 @@ class SecureFileHandler(BaseHTTPRequestHandler):
                 else:
                     # Text field
                     form_data[name_match] = content.decode('utf-8', errors='ignore')
-            self.wfile.write(error_html.encode())
+        
+        return form_data
 
     def do_POST(self):
-        """Handle POST requests (file uploads and batch download)"""
+        """Handle POST requests (file uploads)"""
         if not self.authenticate():
             return
-
-        if self.path == '/batch_download':
-            self.handle_batch_download()
-            return
-
+        
         try:
-            content_type = self.headers.get("Content-Type", "")
-            if not content_type.startswith("multipart/form-data"):
+            content_type = self.headers.get('Content-Type', '')
+            if not content_type.startswith('multipart/form-data'):
                 self.send_response(400)
-                self.send_header("Content-Type", "text/html")
+                self.send_header('Content-Type', 'text/html')
                 self.end_headers()
-                self.wfile.write(b"<html><body><h1>Bad Request</h1><p>Expected multipart/form-data</p></body></html>")
+                self.wfile.write(b'<html><body><h1>Bad Request</h1><p>Expected multipart/form-data</p></body></html>')
                 return
-
+            
             # Extract boundary
-            if "boundary=" not in content_type:
+            if 'boundary=' not in content_type:
                 self.send_response(400)
-                self.send_header("Content-Type", "text/html")
+                self.send_header('Content-Type', 'text/html')
                 self.end_headers()
-                self.wfile.write(b"<html><body><h1>Bad Request</h1><p>No boundary found</p></body></html>")
+                self.wfile.write(b'<html><body><h1>Bad Request</h1><p>No boundary found</p></body></html>')
                 return
-
-            boundary = content_type.split("boundary=")[1].strip()
-            content_length = int(self.headers.get("Content-Length", 0))
-
+            
+            boundary = content_type.split('boundary=')[1].strip()
+            content_length = int(self.headers.get('Content-Length', 0))
+            
             if content_length > 100 * 1024 * 1024:  # 100MB limit
                 self.send_response(413)
-                self.send_header("Content-Type", "text/html")
+                self.send_header('Content-Type', 'text/html')
                 self.end_headers()
-                self.wfile.write(b"<html><body><h1>File Too Large</h1><p>Maximum file size is 100MB</p></body></html>")
+                self.wfile.write(b'<html><body><h1>File Too Large</h1><p>Maximum file size is 100MB</p></body></html>')
                 return
-
+            
             # Read the data
             raw_data = self.rfile.read(content_length)
-
+            
             # Parse multipart data
             form_data = self.parse_multipart(raw_data, boundary)
-
+            
             # Get upload path and file data
-            upload_path = form_data.get("upload_path", "")
-            file_info = form_data.get("file")
-
-            if not file_info or not file_info.get("filename"):
+            upload_path = form_data.get('upload_path', '')
+            file_info = form_data.get('file')
+            
+            if not file_info or not file_info.get('filename'):
                 self.send_response(400)
-                self.send_header("Content-Type", "text/html")
+                self.send_header('Content-Type', 'text/html')
                 self.end_headers()
-                self.wfile.write(b"<html><body><h1>Bad Request</h1><p>No file uploaded</p></body></html>")
+                self.wfile.write(b'<html><body><h1>Bad Request</h1><p>No file uploaded</p></body></html>')
                 return
-
-            filename = file_info["filename"]
-            file_data = file_info["content"]
-
+            
+            filename = file_info['filename']
+            file_data = file_info['content']
+            
             # Sanitize filename
             filename = os.path.basename(filename)
             if not filename:
-                filename = "uploaded_file"
-
+                filename = 'uploaded_file'
+            
             # Determine upload directory
             if upload_path and upload_path.strip():
                 upload_dir = self.sanitize_path(upload_path.strip())
             else:
                 upload_dir = os.getcwd()
-
+            
             # Ensure upload directory exists and is valid
             try:
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir, exist_ok=True)
-
+                
                 # Verify it's within our allowed paths
                 real_upload_dir = os.path.realpath(upload_dir)
                 real_cwd = os.path.realpath(os.getcwd())
-
+                
                 if not real_upload_dir.startswith(real_cwd):
                     upload_dir = os.getcwd()
-
+                    
             except:
                 upload_dir = os.getcwd()
-
+            
             # Save file
             file_path = os.path.join(upload_dir, filename)
-
+            
             # Handle file conflicts
             counter = 1
             original_filename = filename
@@ -981,13 +865,13 @@ class SecureFileHandler(BaseHTTPRequestHandler):
                 filename = f"{name}_{counter}{ext}"
                 file_path = os.path.join(upload_dir, filename)
                 counter += 1
-
+            
             # Write file
-            with open(file_path, "wb") as f:
+            with open(file_path, 'wb') as f:
                 f.write(file_data)
-
+            
             # Generate success response
-            success_html = f"""<!DOCTYPE html>
+            success_html = f'''<!DOCTYPE html>
 <html>
 <head>
     <title>Upload Success - DEMIGOD SERVER</title>
@@ -1013,19 +897,19 @@ class SecureFileHandler(BaseHTTPRequestHandler):
         <a href="/{"" if not upload_path else upload_path}" class="btn">Go Back Now</a>
     </div>
 </body>
-</html>"""
-
+</html>'''
+            
             self.send_response(200)
-            self.send_header("Content-Type", "text/html")
+            self.send_header('Content-Type', 'text/html')
             self.end_headers()
             self.wfile.write(success_html.encode())
-
+            
         except Exception as e:
             error_msg = str(e)
             self.send_response(500)
-            self.send_header("Content-Type", "text/html")
+            self.send_header('Content-Type', 'text/html')
             self.end_headers()
-            error_html = f"""<!DOCTYPE html>
+            error_html = f'''<!DOCTYPE html>
 <html>
 <head>
     <title>Upload Error - DEMIGOD SERVER</title>
@@ -1042,13 +926,9 @@ class SecureFileHandler(BaseHTTPRequestHandler):
         <a href="javascript:history.back()" class="btn">Go Back</a>
     </div>
 </body>
-</html>"""
+</html>'''
             self.wfile.write(error_html.encode())
 
-# Change working directory to the parent of the script location
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-# Always serve from the root of the C: drive
-os.chdir("C:\\")
 def get_local_ip():
     """Get local IP address"""
     try:
@@ -1102,19 +982,16 @@ def print_qr_code_cli(text):
     except Exception as e:
         print(f"❌ QR generation failed: {e}")
 
-import ssl
-
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(
         description="DEMIGOD Secure File Server - Zero-database file serving with terminal aesthetic",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""        
+        epilog="""
 Examples:
   python secure_server.py
   python secure_server.py -u admin -p secret123 -P 9000
   python secure_server.py --username hacker --password l33t --port 8080
-  python secure_server.py --cert cert.pem --key key.pem --port 8443 # For HTTPS
         """
     )
     
@@ -1134,13 +1011,7 @@ Examples:
     parser.add_argument('--no-qr',
                        action='store_true',
                        help='Disable QR code generation in CLI')
-
-    parser.add_argument('--cert',
-                        help='Path to SSL certificate file (e.g., cert.pem)')
-
-    parser.add_argument('--key',
-                        help='Path to SSL private key file (e.g., key.pem)')
-
+    
     args = parser.parse_args()
     
     # Print banner
@@ -1156,38 +1027,15 @@ Examples:
     try:
         # Create server
         server = ThreadingHTTPServer(('0.0.0.0', args.port), SecureFileHandler)
-        protocol = "http"
-
-        # Configure SSL if cert and key are provided
-        if args.cert and args.key:
-            try:
-                context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-                context.load_cert_chain(args.cert, args.key)
-                server.socket = context.wrap_socket(server.socket, server_side=True)
-                protocol = "https"
-                print(f"\n");
-                print(f"🔒 HTTPS enabled using certificate: {args.cert} and key: {args.key}")
-            except FileNotFoundError:
-                print("\n");
-                print("❌ SSL certificate or key file not found. Running as HTTP.")
-            except ssl.SSLError as e:
-                print("\n");
-                print(f"❌ SSL error: {e}. Running as HTTP.")
-            except Exception as e:
-                print("\n");
-                print(f"❌ An unexpected error occurred with SSL: {e}. Running as HTTP.")
-        else:
-            print("\n");
-            print("⚠️  Running as HTTP. Use --cert and --key for HTTPS.")
-
-        print(f"\n🔐 Authentication:")
+        
+        print(f"🔐 Authentication:")
         print(f"   Username: {args.username}")
         print(f"   Password: {args.password}")
         print()
         
         print(f"🌐 Server URLs:")
-        print(f"   Local:    {protocol}://127.0.0.1:{args.port}")
-        print(f"   Network:  {protocol}://{local_ip}:{args.port}")
+        print(f"   Local:    http://127.0.0.1:{args.port}")
+        print(f"   Network:  http://{local_ip}:{args.port}")
         print()
         
         print(f"📁 Serving directory: {os.getcwd()}")
@@ -1195,7 +1043,7 @@ Examples:
         
         # Print QR code if enabled
         if not args.no_qr:
-            server_url = f"{protocol}://{local_ip}:{args.port}"
+            server_url = f"http://{local_ip}:{args.port}"
             print_qr_code_cli(server_url)
         
         print("🛡️  Security Features:")
@@ -1204,8 +1052,6 @@ Examples:
         print("   ✅ Directory traversal protection")
         print("   ✅ Filename sanitization")
         print("   ✅ Zero database/logging (RAM only)")
-        if protocol == "https":
-            print("   ✅ HTTPS (TLS) Encryption")
         print()
         
         print("🚀 Server Features:")
