@@ -1048,7 +1048,7 @@ class SecureFileHandler(BaseHTTPRequestHandler):
 # Change working directory to the parent of the script location
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # Always serve from the root of the C: drive
-os.chdir("C:\\")
+os.chdir("/")
 def get_local_ip():
     """Get local IP address"""
     try:
